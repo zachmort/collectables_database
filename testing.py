@@ -6,11 +6,11 @@ test = {"href": "https://api.ebay.com/buy/browse/v1/item_summary/search?q=laptop
 
 
 def transverse_json_data(data, result=None, parent_key =""):
+    items_dict = {}
     if result is None:
         result = {}
     if isinstance(data, dict):
         for key, value in data.items():
-            # temp_key = parent_key.replace("[0]","" )
             full_key = f"{parent_key}.{key}" if parent_key else key
             transverse_json_data(value, result, parent_key=full_key)
     elif isinstance(data, list):
@@ -19,18 +19,24 @@ def transverse_json_data(data, result=None, parent_key =""):
             transverse_json_data(item, result, parent_key=full_key)
     else:
         result[parent_key] = data
-        # resultList.append(result)
     return result
 
 item_list = []
 item_list.append(transverse_json_data(test))
 
+# for each item retuened add it to the list then loop through all items which each item should be a dict
+
 def data_by_item_id(data):
     items_by_id ={}
     i = 0
-    for item in data:
+    for item in item_list:
+        # print(type(item))
         item_id = item.get(f"itemSummaries[{i}].itemId")
         items_by_id[item_id] = item
         i += 1
     return items_by_id
 
+# temp = transverse_json_data(item_list)
+
+# temp2 = data_by_item_id(item_list)
+# print(temp2)
