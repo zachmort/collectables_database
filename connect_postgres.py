@@ -30,6 +30,7 @@ cursor = connection.cursor()
 # catalog_name = 'Cards'
 schema_name = 'cards_schema'
 table_name = 'example_table'
+project_name = 'Cards'
 
 test = {"href": "https://api.ebay.com/buy/browse/v1/item_summary/search?q=laptop&limit=1&filter=buyingOptions%3A%7BFIXED_PRICE%7D&offset=0", "total": 1933831, "next": "https://api.ebay.com/buy/browse/v1/item_summary/search?q=laptop&limit=1&filter=buyingOptions%3A%7BFIXED_PRICE%7D&offset=1", "limit": 1, "offset": 0, "itemSummaries": [{"itemId": "v1|326160310582|0", "title": "Samsung Chromebook XE350XBA-K05US 15.6' 1080p FHD Laptop Intel 4GB RAM 128GB SSD", "leafCategoryIds": ["177"], "categories": [{"categoryId": "177", "categoryName": "PC Laptops & Netbooks"}, {"categoryId": "58058", "categoryName": "Computers/Tablets & Networking"}, {"categoryId": "175672", "categoryName": "Laptops & Netbooks"}], "image": {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/GBsAAOSwAXVmaIaV/s-l225.jpg"}, "price": {"value": "349.00", "currency": "USD"}, "itemHref": "https://api.ebay.com/buy/browse/v1/item/v1%7C326160310582%7C0", "seller": {"username": "jcs_computer_store", "feedbackPercentage": "96.5", "feedbackScore": 45754}, "condition": "Used", "conditionId": "3000", "thumbnailImages": [{"imageUrl": "https://i.ebayimg.com/images/g/GBsAAOSwAXVmaIaV/s-l1600.jpg"}], "shippingOptions": [{"shippingCostType": "FIXED", "shippingCost": {"value": "0.00", "currency": "USD"}, "minEstimatedDeliveryDate": "2024-06-25T07:00:00.000Z", "maxEstimatedDeliveryDate": "2024-06-25T07:00:00.000Z", "guaranteedDelivery": True}], "buyingOptions": ["FIXED_PRICE"], "epid": "14043912572", "itemWebUrl": "https://www.ebay.com/itm/326160310582?hash=item4bf0ab6136:g:GBsAAOSwAXVmaIaV&amdata=enc%3AAQAJAAAA0CmKvRLb%2BDtiMhaIFIPA5WsqknBx3ouaDDMK%2BzBnVBgxAuKi8aFTBJ34kmfoejIJcVff0MDS8wio%2FylvQCZpxCo4XE6%2FIRoCFevHc8s87RnIKVT%2FXrpmM02itxAwEuYOf%2FFws3VH%2BBdbRTP%2FEFIk5UwFdg4bpit%2BvPhjrEQdZfdthVqtbwZOCeR4VB99xDrufDzW5T%2F9rzah2wQO3rD%2FKIzmogPFLb93CFn9Ba1gXQKlXClJxryHv4QgeiabOLNhgY31xXf8ZcYdqMrwnywLxlA%3D", "itemLocation": {"postalCode": "146**", "country": "US"}, "additionalImages": [{"imageUrl": "https://i.ebayimg.com/thumbs/images/g/V48AAOSw3epmaIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/C1UAAOSwSFRmaIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/b8MAAOSwMFxmaIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/NOUAAOSwDTJmaIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/UwUAAOSwtO5maIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/OC0AAOSwUGpmaIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/Hf4AAOSwJ-5maIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/cj0AAOSwYD5maIaV/s-l225.jpg"}, {"imageUrl": "https://i.ebayimg.com/thumbs/images/g/6~oAAOSwJAdmaIaV/s-l225.jpg"}], "adultOnly": False, "legacyItemId": "326160310582", "availableCoupons": False, "itemCreationDate": "2024-06-12T09:21:31.000Z", "topRatedBuyingExperience": False, "priorityListing": True, "listingMarketplaceId": "EBAY_US"}]}
 
@@ -44,8 +45,7 @@ def check_table_exits():
 
 def table_exist_schema_validation():
     #####this will proabbly be slow chekcing in SQL try a shema validation package
-    # table_schema_validation = 
-            ### Check if table exists
+    ### Check if table exists
     if check_table_exits() == True:
         schema_check = sql.SQL(f"""
                 SELECT column_name, data_type 
@@ -53,31 +53,44 @@ def table_exist_schema_validation():
                 WHERE table_schema = '{schema_name}'
                 AND table_name = '{table_name}'
                                     """)
+        
         cursor.execute(schema_check)
         table_schema: list[tuple] = cursor.fetchall()
+        
         table_schema_validation_column_name = table_schema[0][0] == 'itemId'
         table_schema_validation_column_type = table_schema[0][1] == "character varying"
-        if not table_schema_validation_column_name and not table_schema_validation_column_type:
+        print(table_schema)
+        print(f"name_check: {table_schema_validation_column_name}", table_schema_validation_column_type)
+        print(test := not table_schema_validation_column_name and not table_schema_validation_column_type)
+        
+        if not table_schema_validation_column_name or not table_schema_validation_column_type:
             try:
-                drop_table = sql.SQL(f"""DROP TABLE `Cards.{schema_name}.{table_name}`""")
+                print()
+                print("Table had incorrect schema type attempting to recreate")
+                drop_table = sql.SQL(f"""DROP TABLE {schema_name}.{table_name}""")
                 cursor.execute(drop_table)
-                print("Table does not exist")
-                check_table_exits()
-            except:
+                print("table dropped checking schema again")
+                table_exist_schema_validation()
+                return True
+            except Exception as e:
                 print("table could not be dropped")
+                print(e)
+                return False
 
         # return print(table_schema_validation_column_name, table_schema_validation_column_type)
     else:
-        create_table = sql.SQL(f"""
-        CREATE TABLE `Cards.{schema_name}.{table_name}` AS 
-        itemId VARCHAR PRIMARY KEY
-        , jsonString VARCHAR
-                            """)
-        cursor.execute(create_table)
-        return print("Table did not exist, created table")
-
-table_exist_schema_validation()
-# print(test)
+        try:
+            create_table = sql.SQL(f"""
+            CREATE TABLE {schema_name}.{table_name} (
+                    itemId VARCHAR PRIMARY KEY
+                    , jsonString VARCHAR
+                    )               """)
+            cursor.execute(create_table)
+            print("Table did not exist, created table")
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
 def get_data_store_data():
     columns = ['itemId', 'jsonData']
@@ -142,7 +155,7 @@ def insert_data_to_db(connection_params, *input_string):
         merge_temp_table = None
 
 
-        if table_check == True:
+        if table_exist_schema_validation() == True:
         # if table_check and table_schema_validation:
             try:
                 # Execute the batch insert
@@ -185,3 +198,7 @@ insert_data_to_db(connection_params=connection_params)
 # Insert the fetched data into the PostgreSQL database
 # if data:
     # insert_data_to_db(connection_params, data)
+
+
+table_exist_schema_validation()
+# print(test)
