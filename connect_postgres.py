@@ -18,8 +18,7 @@ connection_params = {
                 , 'user': user 
                 , 'password': password 
                 , 'host': host 
-                , 'port': port 
-                }
+                , 'port': port}
 
 # Connect to the PostgreSQL database
 connection = psycopg2.connect(**connection_params)
@@ -65,7 +64,6 @@ def table_exist_schema_validation():
         
         if not table_schema_validation_column_name or not table_schema_validation_column_type:
             try:
-                print()
                 print("Table had incorrect schema type attempting to recreate")
                 drop_table = sql.SQL(f"""DROP TABLE {schema_name}.{table_name}""")
                 cursor.execute(drop_table)
@@ -76,6 +74,8 @@ def table_exist_schema_validation():
                 print("table could not be dropped")
                 print(e)
                 return False
+        else:
+            return True
 
         # return print(table_schema_validation_column_name, table_schema_validation_column_type)
     else:
@@ -92,36 +92,8 @@ def table_exist_schema_validation():
             print(e)
             return False
 
-def get_data_store_data():
-    columns = ['itemId', 'jsonData']
-    temp = []
-    items = transverse_json_data(test)
-    temp.append(items)
-    items_pairs = data_by_item_id(items)
-    
-    data_list = []
-    for i in items_pairs:
-        for key, value in data_by_item_id(items_pairs).items():
-            record = {'itemId': f'{key}','jsonData': f'{value}',}
-            data_list.append(record)
-
-    # Convert the list of dictionaries into a list of tuples (corresponding to each row)
-    values = [tuple(item[col] for col in columns) for item in data_list]
-
-
-    # Prepare the SQL query
-    drop_table_query = sql.SQL(f"DROP TABLE IF EXISTS {schema_name}.{table_name};")
-    create_table_query = sql.SQL(f"""CREATE TABLE {schema_name}.{table_name}
-                                    itemId string PRIMARY KEY
-                                    , jsonData varchar 
-                                    ;""")
-    insert_data_query = sql.SQL("INSERT INTO {} ({}) VALUES %s").format(
-                sql.SQL('.').join([
-        sql.Identifier(schema_name),
-        sql.Identifier(table_name)
-    ]),
-        sql.SQL(',').join(map(sql.Identifier, columns))
-    )
+def get_api_data():
+    pass
 
 def insert_data_to_db(connection_params, *input_string):
     """
@@ -139,16 +111,39 @@ def insert_data_to_db(connection_params, *input_string):
     - input_string (str): The string data to be inserted into the database.
     """
 
+    columns = ['itemId', 'jsonData']
+    temp = []
+    items = transverse_json_data(test)
+    temp.append(items)
+    items_pairs = data_by_item_id(items)
+    
+    data_list = []
+    for i in items_pairs:
+        for key, value in data_by_item_id(items_pairs).items():
+            record = {'itemId': f'{key}','jsonData': f'{value}',}
+            data_list.append(record)
+
+    # Convert the list of dictionaries into a list of tuples (corresponding to each row)
+    values = [tuple(item[col] for col in columns) for item in data_list]
+
+
+    # Prepare the SQL query
+    insert_data_query = sql.SQL("INSERT INTO {} ({}) VALUES %s").format(
+                sql.SQL('.').join([
+        sql.Identifier(schema_name),
+        sql.Identifier(table_name)
+    ]),
+        sql.SQL(',').join(map(sql.Identifier, columns))
+    )
+
     try:
         data = None
-
         ### create temp table and insert the data of the new rows here
         ## Temp table created for data pulled in by API call
         create_temp_table = sql.SQL(f"""
                                             CREATE TEMP TABLE temp_{table_name} AS
                                             SELECT 
                                         """)
-        
         ### take tmp table and merge it into base table
         ### join on product id
         ### check that the recieved/updated time is greater than the base updated time 
