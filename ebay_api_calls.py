@@ -1,3 +1,4 @@
+import json
 import requests
 import pandas as pd
 import pprint
@@ -11,6 +12,7 @@ from dotenv import load_dotenv
 import os
 import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 
 
 
@@ -57,7 +59,6 @@ def get_ebay_api_call():
     CLIENT_SECRET = PROD_CLIENT_SECRET
 
     # Endpoint for getting OAuth token
-    # OAUTH_URL = 'https://api.sandbox.ebay.com/identity/v1/oauth2/token'
     OAUTH_URL = 'https://api.ebay.com/identity/v1/oauth2/token'
 
     # Define the headers and data for the token request
@@ -78,7 +79,6 @@ def get_ebay_api_call():
     access_token = response.json()['access_token']
 
     # Base URL for eBay Browse API
-    # EBAY_API_URL = 'https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search'
     EBAY_API_URL = 'https://api.ebay.com/buy/browse/v1/item_summary/search'
 
     # Define headers including the Authorization header
@@ -89,19 +89,27 @@ def get_ebay_api_call():
     }
 
         # Define the different offsets/limits to fetch in parallel
-    calls = [
-        {'offset': 0, 'limit': 50},
-        {'offset': 50, 'limit': 50},
-        {'offset': 100, 'limit': 50}
-    ]
+    offset = 0
+    limit = 50
+    calls = []
+    for i in range(1):
+        inc_dict = {"offset": offset, "limit": limit}
+        calls.append(inc_dict)
+        offset+=50
+        
 
-    results = []
+    results: list[Any] = []
     # Use ThreadPoolExecutor to fetch all results in parallel
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_call = {executor.submit(fetch_results, c['offset'], c['limit'], headers): c for c in calls}
         for future in as_completed(future_to_call):
             result_data = future.result()
             results.append(result_data)
+    
+    with open("textfile","w") as text_file:
+        json.dump(results, text_file)
+
+    return results
 
     # Print or process all results combined
     for i, result in enumerate(results, start=1):
@@ -109,7 +117,6 @@ def get_ebay_api_call():
 
 if __name__ == "__main__":
     get_ebay_api_call()
-
 
 
 def get_item_auction_info(item_id):

@@ -3,8 +3,8 @@ from psycopg2 import sql
 from psycopg2 import extras
 from dotenv import load_dotenv
 import os
-from testing import transverse_json_data
-from testing import data_by_item_id
+from parse_api_data import transverse_json_data
+from parse_api_data import data_by_item_id
 
 
 load_dotenv()
