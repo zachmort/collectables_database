@@ -13,6 +13,7 @@ import os
 import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
+from deprecated import deprecated
 
 
 
@@ -28,10 +29,10 @@ from typing import Any
 # -> multiple categoryId s
 
 load_dotenv()
-SANDBOX_CLIENT_SECRET = os.getenv("sandbox_client_secret")
-SANDBOX_CLIENT_ID = os.getenv("sandbox_client_id")
-PROD_CLIENT_SECRET = os.getenv("client_secret")
-PROD_CLIENT_ID = os.getenv("client_id")
+SANDBOX_CLIENT_SECRET: str | None = os.getenv("sandbox_client_secret")
+SANDBOX_CLIENT_ID: str | None = os.getenv("sandbox_client_id")
+PROD_CLIENT_SECRET: str | None = os.getenv("client_secret")
+PROD_CLIENT_ID: str | None = os.getenv("client_id")
 
 def fetch_results(offset, limit, headers):
     EBAY_API_URL = 'https://api.ebay.com/buy/browse/v1/item_summary/search'
@@ -44,8 +45,11 @@ def fetch_results(offset, limit, headers):
     response.raise_for_status()
     return response.json()
 
-def get_ebay_api_call():
-    headers = {
+def get_ebay_api_call() -> list[Any]:
+    """
+
+    """
+    headers: dict[str, str] = {
         "Authorization": ""
         , "content-Type": ""
         , "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"
@@ -178,6 +182,7 @@ def get_item_auction_info(item_id):
     except:
         print("this item does not have an auction")
 
+@deprecated(reason="Use new_function instead")
 def get_sold_item_data():
     # Replace with your App ID (Client ID) and Cert ID (Client Secret)
     # CLIENT_ID = SANDBOX_CLIENT_ID
@@ -244,14 +249,18 @@ def get_sold_item_data():
     # Print the response
     return print("get sold item data", response.json())
 
+@deprecated(reason="Use new_function instead")
 def get_collx_api_call():
     pass
 
+@deprecated(reason="Use new_function instead")
 def web_scrape_beckett_wesite():
     pass
 
+@deprecated(reason="Use new_function instead")
 def get_item_info():
     pass
 
+@deprecated(reason="Use new_function instead")
 def compare_site_info():
     pass
