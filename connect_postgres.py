@@ -141,13 +141,23 @@ def insert_data_to_db(connection_params, *input_string):
         ### create temp table and insert the data of the new rows here
         ## Temp table created for data pulled in by API call
         create_temp_table = sql.SQL(f"""
-                                            CREATE TEMP TABLE temp_{table_name} AS
-                                            SELECT 
+                                            CREATE TEMP TABLE temp_{table_name} AS (
+                                            SELECT *
+                                            FROM {schema_name}.{table_name}
+        ) ON COMMIT DROP;
                                         """)
         ### take tmp table and merge it into base table
         ### join on product id
         ### check that the recieved/updated time is greater than the base updated time 
-        merge_temp_table = None
+        merge_temp_table = sql.SQL("""
+            INSERT INTO target_table (id, some_value, updated_at)
+            SELECT tmp.id, tmp.some_value, tmp.updated_at
+            FROM temp_table tmp
+            ON CONFLICT (id)
+            DO UPDATE
+              SET some_value = EXCLUDED.some_value,
+                  updated_at = EXCLUDED.updated_at;
+                                   """)
 
 
         if table_exist_schema_validation() == True:

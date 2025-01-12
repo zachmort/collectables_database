@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  A SAM template to run a Python script once a week to fetch data from eBay
+  and upload it to PostgreSQL.
+
+Globals:
+  Function:
+    Runtime: python3.9
+    MemorySize: 128
+    Timeout: 60
+    Environment:
+      Variables:
+        EBAY_API_KEY: "<INSERT_EBAY_API_KEY>"
+        DB_HOST: "<INSERT_DB_HOST>"
+        DB_PORT: "5432"
+        DB_NAME: "<INSERT_DB_NAME>"
+        DB_USER: "<INSERT_DB_USER>"
+        DB_PASSWORD: "<INSERT_DB_PASSWORD>"
+
+Resources:
+  EbayToPostgresFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: app.lambda_handler
+      Policies:
+        - AmazonRDSFullAccess
+        - CloudWatchLogsFullAccess
+      Events:
+        WeeklySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 0 ? * MON *)
+            Name: "WeeklyEbayToPostgres"
+            Description: "Trigger a function once a week to fetch eBay data and upload to PostgreSQL DB."
+
+Outputs:
+  EbayToPostgresFunctionArn:
+    Description: "ARN of the EbayToPostgresFunction Lambda"
+    Value: !GetAtt EbayToPostgresFunction.Arn

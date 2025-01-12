@@ -122,7 +122,7 @@ def get_ebay_api_call() -> list[Any]:
 if __name__ == "__main__":
     get_ebay_api_call()
 
-
+@deprecated(reason="Use new_function instead")
 def get_item_auction_info(item_id):
     try:
         session = requests.Session()
@@ -133,7 +133,6 @@ def get_item_auction_info(item_id):
         }
         # response = requests.get("https://api.ebay.com/buy/browse/v1/item_summary/search?q=drone&limit=3")
 
-        # Replace with your App ID (Client ID) and Cert ID (Client Secret)
         CLIENT_ID = keys.client_id
         CLIENT_SECRET = keys.client_secret
 
